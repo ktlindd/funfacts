@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Niche Fun Facts</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f7f7f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: white;
+      padding: 24px;
+      width: 420px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .fact {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+    .buttons button {
+      margin-right: 10px;
+      padding: 8px 14px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div id="fact" class="fact"></div>
+  <div class="buttons">
+    <button onclick="rateFact(1)">Like</button>
+    <button onclick="rateFact(-1)">Dislike</button>
+    <button onclick="rateFact(0)">Skip</button>
+  </div>
+</div>
+
+<script>
+const facts = [
+  {
+    text: "Octopuses have three hearts and blue blood due to copper-based hemocyanin.",
+    tags: ["science", "biology", "marine"]
+  },
+  {
+    text: "Ancient Romans used urine as detergent because of its ammonia content.",
+    tags: ["history", "daily_life"]
+  },
+  {
+    text: "In 1977, a software bug nearly caused a Soviet nuclear response.",
+    tags: ["technology", "history", "systems"]
+  },
+  {
+    text: "Bananas are berries, but strawberries are not.",
+    tags: ["science", "biology", "botany"]
+  },
+  {
+    text: "Early elevator adoption required hiring operators because people didn’t trust automation.",
+    tags: ["technology", "behavior", "history"]
+  }
+];
+
+const STORAGE_KEY = "interestVector";
+
+function getInterestVector() {
+  return JSON.parse(sessionStorage.getItem(STORAGE_KEY)) || {};
+}
+
+function saveInterestVector(vector) {
+  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(vector));
+}
+
+function updateInterests(tags, signal) {
+  const vector = getInterestVector();
+  tags.forEach(tag => {
+    vector[tag] = (vector[tag] || 0) + signal * 0.5;
+  });
+  saveInterestVector(vector);
+}
+
+function scoreFact(fact) {
+  const vector = getInterestVector();
+  let score = 0;
+  fact.tags.forEach(tag => {
+    score += vector[tag] || 0;
+  });
+  return score + Math.random();
+}
+
+function pickNextFact() {
+  const scored = facts.map(f => ({
+    fact: f,
+    score: scoreFact(f)
+  }));
+  scored.sort((a, b) => b.score - a.score);
+  return scored[0].fact;
+}
+
+let currentFact = null;
+
+function showFact() {
+  currentFact = pickNextFact();
+  document.getElementById("fact").innerText = currentFact.text;
+}
+
+function rateFact(signal) {
+  if (signal !== 0) {
+    updateInterests(currentFact.tags, signal);
+  }
+  showFact();
+}
+
+showFact();
+</script>
+
+</body>
+</html>
